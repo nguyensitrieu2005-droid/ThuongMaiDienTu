@@ -1,0 +1,141 @@
+<%- include('partials/head', { title: product.name }) %>
+<% const withImg = variants.find(v => v.image_url); const firstOk = variants.findIndex(v => v.stock_quantity > 0); %>
+<div class="container">
+  <nav class="small mb-3">
+    <a href="/">Trang chủ</a> / <a href="/?cat=<%= product.category_slug %>"><%= product.category %></a> / <%= product.name %>
+  </nav>
+  <% if (msg) { %><div class="alert alert-info py-2"><%= msg %></div><% } %>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body p-4">
+      <div class="row g-4">
+        <div class="col-md-5">
+          <% if (withImg) { %>
+            <img id="mainImg" src="<%= withImg.image_url %>" alt="<%= product.name %>" class="img-fluid rounded w-100" style="aspect-ratio: 4/3; object-fit: cover;">
+          <% } else { %>
+                        <div class="d-flex align-items-center justify-content-center text-white fw-bold rounded <%= placeClass(product.id) %>"
+                 style="aspect-ratio: 4/3; font-size: 5rem;">
+              <%= product.name.charAt(0).toUpperCase() %>
+            </div>
+          <% } %>
+        </div>
+
+        <div class="col-md-7">
+          <small class="text-muted"><%= product.category %><% if (product.brand) { %> · <%= product.brand %><% } %></small>
+          <h3 class="mt-1"><%= product.name %></h3>
+          <div class="mb-2">
+            <% if (Number(stats.n) > 0) { %>
+              <span class="text-warning"><%= stars(stats.avg) %></span>
+              <a href="#reviews" class="text-muted text-decoration-none small"><%= stats.avg %> · <%= stats.n %> đánh giá</a>
+            <% } else { %>
+              <span class="text-muted small">Chưa có đánh giá</span>
+            <% } %>
+          </div>
+          <p class="text-muted mb-3">Bán bởi: <a href="/shop/<%= product.shop_slug %>" class="fw-semibold text-decoration-none"><%= product.shop_name %></a></p>
+
+          <% if (!variants.length) { %>
+            <div class="alert alert-secondary">Sản phẩm chưa có phiên bản để bán.</div>
+          <% } else { %>
+            <div class="fs-3 text-danger fw-bold" id="price"><%= vnd(variants[firstOk >= 0 ? firstOk : 0].price) %></div>
+            <div class="small text-muted mb-3" id="stock"></div>
+
+            <form method="POST" action="/cart/add">
+              <h6>Chọn phiên bản</h6>
+              <div class="mb-3">
+                <% variants.forEach((v, i) => { %>
+                  <input type="radio" class="btn-check" name="variant_id" id="v<%= v.id %>" value="<%= v.id %>" autocomplete="off"
+                         data-price="<%= vnd(v.price) %>" data-stock="<%= v.stock_quantity %>" data-image="<%= v.image_url || '' %>"
+                         <%= i === firstOk ? 'checked' : '' %> <%= v.stock_quantity < 1 ? 'disabled' : '' %>>
+                  <label class="btn btn-outline-primary btn-sm me-1 mb-1" for="v<%= v.id %>">
+                    <%= Object.values(v.attributes || {}).join(' / ') || v.sku %><%= v.stock_quantity < 1 ? ' (Hết hàng)' : '' %>
+                  </label>
+                <% }) %>
+              </div>
+              <div class="d-flex align-items-center gap-3">
+                <label class="mb-0">Số lượng</label>
+                <input type="number" id="qty" name="quantity" value="1" min="1" class="form-control" style="width: 90px;">
+                <button class="btn btn-primary px-4" <%= firstOk === -1 ? 'disabled' : '' %>>Thêm vào giỏ</button>
+              </div>
+            </form>
+          <% } %>
+
+          <% if (product.description) { %>
+            <hr><h6>Mô tả sản phẩm</h6>
+            <p style="white-space: pre-line;"><%= product.description %></p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4" id="reviews">
+    <div class="card-body p-4">
+      <h5 class="mb-3">Đánh giá sản phẩm</h5>
+      <% if (Number(stats.n) > 0) { %>
+        <div class="mb-3">
+          <span class="fs-2 fw-bold"><%= stats.avg %></span><span class="text-muted">/5</span>
+          <span class="text-warning fs-5 ms-2"><%= stars(stats.avg) %></span>
+          <small class="text-muted ms-1">(<%= stats.n %> đánh giá)</small>
+        </div>
+      <% } %>
+
+      <% if (canReview) { %>
+        <form method="POST" action="/product/<%= product.id %>/review" class="border rounded p-3 mb-3 bg-light">
+          <div class="fw-semibold mb-2">Bạn đã mua sản phẩm này, hãy chia sẻ cảm nhận:</div>
+          <select name="rating" class="form-select form-select-sm mb-2" style="max-width: 260px;" required>
+            <option value="">-- Chọn số sao --</option>
+            <option value="5">★★★★★ Tuyệt vời</option>
+            <option value="4">★★★★☆ Tốt</option>
+            <option value="3">★★★☆☆ Bình thường</option>
+            <option value="2">★★☆☆☆ Chưa tốt</option>
+            <option value="1">★☆☆☆☆ Rất tệ</option>
+          </select>
+          <textarea name="comment" class="form-control form-control-sm mb-2" rows="3" maxlength="1000" placeholder="Nhận xét của bạn (không bắt buộc)"></textarea>
+          <button class="btn btn-sm btn-primary">Gửi đánh giá</button>
+        </form>
+      <% } %>
+
+      <% if (reviews.length === 0) { %>
+        <p class="text-muted mb-0">Chưa có đánh giá nào. Chỉ khách đã nhận hàng mới có thể đánh giá.</p>
+      <% } %>
+      <% reviews.forEach(r => { %>
+        <div class="border-top py-3">
+          <div><strong><%= maskName(r.full_name) %></strong>
+            <span class="text-warning ms-2"><%= stars(r.rating) %></span>
+            <small class="text-muted ms-2"><%= new Date(r.created_at).toLocaleDateString('vi-VN') %></small></div>
+          <% if (r.comment) { %><div class="mt-1"><%= r.comment %></div><% } %>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <% if (related.length) { %>
+    <h5 class="mb-3">Sản phẩm cùng danh mục</h5>
+    <div class="row g-3 mb-5">
+      <% related.forEach(p => { %><%- include('partials/card', { p }) %><% }) %>
+    </div>
+  <% } %>
+</div>
+
+<script>
+  (function () {
+    var radios = document.querySelectorAll('input[name="variant_id"]');
+    if (!radios.length) return;
+    var priceEl = document.getElementById('price');
+    var stockEl = document.getElementById('stock');
+    var qty = document.getElementById('qty');
+    var img = document.getElementById('mainImg');
+    function sync() {
+      var r = document.querySelector('input[name="variant_id"]:checked');
+      if (!r) { stockEl.textContent = 'Sản phẩm đã hết hàng'; return; }
+      priceEl.textContent = r.dataset.price;
+      stockEl.textContent = 'Còn ' + r.dataset.stock + ' sản phẩm';
+      qty.max = r.dataset.stock;
+      if (Number(qty.value) > Number(r.dataset.stock)) qty.value = r.dataset.stock;
+      if (img && r.dataset.image) img.src = r.dataset.image;
+    }
+    radios.forEach(function (r) { r.addEventListener('change', sync); });
+    sync();
+  })();
+</script>
+<%- include('partials/foot') %>

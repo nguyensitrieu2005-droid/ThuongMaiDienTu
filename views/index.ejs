@@ -1,0 +1,62 @@
+<%- include('partials/head', { title: 'Marketplace - Mua sắm trực tuyến' }) %>
+<div class="container">
+
+  <% if (!q && !cat && !min && !max && page === 1) { %>
+    <div class="p-4 p-md-5 mb-4 text-white rounded-3" style="background: linear-gradient(135deg, #0d6efd, #6f42c1);">
+      <h2 class="fw-bold">Mua sắm từ nhiều shop uy tín</h2>
+      <p class="mb-0">Chọn hàng của nhiều shop trong một giỏ, thanh toán một lần. Mỗi shop giao riêng cho bạn.</p>
+    </div>
+  <% } %>
+
+  <div class="mb-3 d-flex flex-wrap gap-2">
+    <a href="/" class="btn btn-sm <%= !cat ? 'btn-primary' : 'btn-outline-primary' %>">Tất cả</a>
+    <% navCategories.forEach(c => { %>
+      <a href="/?cat=<%= c.slug %>" class="btn btn-sm <%= cat === c.slug ? 'btn-primary' : 'btn-outline-primary' %>"><%= c.name %></a>
+    <% }) %>
+  </div>
+
+  <form method="GET" action="/" class="card card-body shadow-sm mb-3 py-2">
+    <input type="hidden" name="q" value="<%= q %>">
+    <input type="hidden" name="cat" value="<%= cat %>">
+    <div class="row g-2 align-items-center">
+      <div class="col-md-4 text-muted small">
+        <% if (q) { %>Kết quả cho "<strong><%= q %></strong>" · <% } %><%= total %> sản phẩm
+      </div>
+      <div class="col-6 col-md-2"><input type="number" name="min" min="0" class="form-control form-control-sm" placeholder="Giá từ" value="<%= min || '' %>"></div>
+      <div class="col-6 col-md-2"><input type="number" name="max" min="0" class="form-control form-control-sm" placeholder="Giá đến" value="<%= max || '' %>"></div>
+      <div class="col-8 col-md-3">
+        <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="new" <%= sort === 'new' ? 'selected' : '' %>>Mới nhất</option>
+          <option value="sold" <%= sort === 'sold' ? 'selected' : '' %>>Bán chạy</option>
+          <option value="rating" <%= sort === 'rating' ? 'selected' : '' %>>Đánh giá cao</option>
+          <option value="price_asc" <%= sort === 'price_asc' ? 'selected' : '' %>>Giá thấp đến cao</option>
+          <option value="price_desc" <%= sort === 'price_desc' ? 'selected' : '' %>>Giá cao đến thấp</option>
+        </select>
+      </div>
+      <div class="col-4 col-md-1"><button class="btn btn-sm btn-primary w-100">Lọc</button></div>
+    </div>
+  </form>
+
+  <div class="row g-3">
+    <% products.forEach(p => { %>
+      <%- include('partials/card', { p }) %>
+    <% }) %>
+  </div>
+
+  <% if (products.length === 0) { %>
+    <div class="alert alert-secondary mt-3">Không tìm thấy sản phẩm phù hợp. <a href="/">Xem tất cả sản phẩm</a></div>
+  <% } %>
+
+  <% if (totalPages > 1) { %>
+    <nav class="mt-4 mb-5">
+      <ul class="pagination justify-content-center">
+        <li class="page-item <%= page <= 1 ? 'disabled' : '' %>"><a class="page-link" href="<%= pageUrl(page - 1) %>">&laquo;</a></li>
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <li class="page-item <%= i === page ? 'active' : '' %>"><a class="page-link" href="<%= pageUrl(i) %>"><%= i %></a></li>
+        <% } %>
+        <li class="page-item <%= page >= totalPages ? 'disabled' : '' %>"><a class="page-link" href="<%= pageUrl(page + 1) %>">&raquo;</a></li>
+      </ul>
+    </nav>
+  <% } %>
+</div>
+<%- include('partials/foot') %>

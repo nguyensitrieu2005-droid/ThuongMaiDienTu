@@ -1,0 +1,27 @@
+<%- include('partials/head', { title: shop.shop_name }) %>
+<div class="container">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body p-4 d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle <%= placeClass(shop.id) %>"
+           style="width: 72px; height: 72px; font-size: 2rem;">
+        <%= shop.shop_name.charAt(0).toUpperCase() %>
+      </div>
+      <div>
+        <h4 class="mb-1"><%= shop.shop_name %></h4>
+        <div class="small text-muted">
+          <%= products.length %> sản phẩm ·
+          <% if (Number(rv.n) > 0) { %><span class="text-warning"><%= stars(rv.avg) %></span> <%= rv.avg %> (<%= rv.n %> đánh giá)<% } else { %>Chưa có đánh giá<% } %>
+          · Tham gia <%= new Date(shop.created_at).toLocaleDateString('vi-VN') %>
+        </div>
+        <% if (shop.description) { %><div class="mt-2"><%= shop.description %></div><% } %>
+      </div>
+    </div>
+  </div>
+
+  <h5 class="mb-3">Sản phẩm của shop</h5>
+  <div class="row g-3 mb-5">
+    <% products.forEach(p => { %><%- include('partials/card', { p }) %><% }) %>
+    <% if (!products.length) { %><p class="text-muted">Shop chưa có sản phẩm nào.</p><% } %>
+  </div>
+</div>
+<%- include('partials/foot') %>

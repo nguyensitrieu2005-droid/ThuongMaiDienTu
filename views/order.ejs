@@ -1,0 +1,75 @@
+<%- include('partials/head', { title: 'Đơn hàng ' + order.order_code }) %>
+<div class="container" style="max-width: 900px;">
+  <% if (success) { %><div class="alert alert-success">Đặt hàng thành công! Cảm ơn bạn đã mua sắm.</div><% } %>
+  <% if (ok) { %><div class="alert alert-success py-2"><%= ok %></div><% } %>
+  <% if (err) { %><div class="alert alert-danger py-2"><%= err %></div><% } %>
+
+  <a href="/orders" class="text-decoration-none">&larr; Tất cả đơn hàng</a>
+  <h4 class="mt-2">Đơn hàng <%= order.order_code %></h4>
+  <p class="text-muted"><%= new Date(order.created_at).toLocaleString('vi-VN') %></p>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100"><div class="card-body">
+        <h6>Giao đến</h6>
+        <strong><%= order.recipient_name %></strong> · <%= order.phone %><br>
+        <small class="text-muted"><%= order.street %>, <%= order.ward %>, <%= order.district %>, <%= order.province %></small>
+      </div></div>
+    </div>
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100"><div class="card-body">
+        <h6>Thanh toán</h6>
+        <%= paymentMethod[order.method] || '' %><br>
+        <span class="badge text-bg-secondary"><%= paymentStatus[order.pay_status] || '' %></span>
+      </div></div>
+    </div>
+  </div>
+
+  <% subs.forEach(s => { %>
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <a href="/shop/<%= s.shop_slug %>" class="fw-bold text-decoration-none text-dark">Shop: <%= s.shop_name %></a>
+        <span class="badge text-bg-<%= statusBadge[s.status] %>"><%= suborderStatus[s.status] %></span>
+      </div>
+      <ul class="list-group list-group-flush">
+        <% s.items.forEach(i => { %>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+              <a href="/product/<%= i.product_id %>" class="text-decoration-none text-dark"><%= i.product_name_snapshot %></a> × <%= i.quantity %>
+              <% if (s.status === 'completed') { %>
+                <a href="/product/<%= i.product_id %>#reviews" class="badge text-bg-warning text-decoration-none ms-2">Đánh giá</a>
+              <% } %>
+            </span>
+            <span><%= vnd(i.line_total) %></span>
+          </li>
+        <% }) %>
+      </ul>
+      <div class="card-footer bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="small text-muted">
+          <% if (s.carrier) { %>Vận chuyển: <strong><%= s.carrier %></strong><%= s.tracking_number ? ' · Mã vận đơn: ' + s.tracking_number : '' %>
+          <% } else if (s.status === 'pending') { %>Đang chờ shop xác nhận
+          <% } else if (s.status === 'confirmed') { %>Shop đang chuẩn bị hàng<% } %>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span>Tạm tính: <strong><%= vnd(s.subtotal) %></strong></span>
+          <% if (s.status === 'pending') { %>
+            <form method="POST" action="/orders/<%= order.id %>/suborders/<%= s.id %>/cancel" class="m-0"
+                  onsubmit="return confirm('Hủy phần đơn hàng của shop này?')">
+              <button class="btn btn-sm btn-outline-danger">Hủy đơn</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+
+  <div class="card shadow-sm mb-5"><div class="card-body">
+    <div class="d-flex justify-content-between"><span>Tiền hàng</span><span><%= vnd(order.subtotal) %></span></div>
+    <div class="d-flex justify-content-between"><span>Phí vận chuyển</span><span><%= vnd(order.shipping_fee) %></span></div>
+    <div class="d-flex justify-content-between fs-5 mt-2">
+      <strong>Tổng cộng</strong><strong class="text-danger"><%= vnd(order.total_amount) %></strong>
+    </div>
+    <div class="small text-muted mt-2">Nếu một phần đơn bị hủy, phần tiền của shop đó sẽ không được tính khi thanh toán.</div>
+  </div></div>
+</div>
+<%- include('partials/foot') %>

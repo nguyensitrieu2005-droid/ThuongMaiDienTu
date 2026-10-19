@@ -1,0 +1,27 @@
+<nav class="navbar navbar-dark bg-primary mb-4">
+  <div class="container gap-2">
+    <a class="navbar-brand fw-bold me-2" href="/">Marketplace</a>
+    <form class="d-flex flex-grow-1" action="/" method="GET" role="search" style="max-width: 520px;">
+      <input class="form-control form-control-sm" type="search" name="q" placeholder="Tìm sản phẩm..." value="<%= q %>">
+      <button class="btn btn-sm btn-warning ms-1">Tìm</button>
+    </form>
+    <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
+      <% if (user) { %>
+        <% if (user.role === 'seller') { %>
+          <a href="/seller" class="btn btn-sm btn-success">Kênh người bán</a>
+        <% } else if (user.role === 'customer') { %>
+          <a href="/seller/register" class="btn btn-sm btn-outline-light">Bán hàng</a>
+        <% } %>
+        <a href="/orders" class="btn btn-sm btn-outline-light">Đơn hàng</a>
+        <a href="/cart" class="btn btn-sm btn-warning">Giỏ hàng <span class="badge text-bg-dark"><%= cartCount %></span></a>
+        <a href="/account" class="text-white text-decoration-none d-none d-md-inline">Xin chào, <%= user.full_name %></a>
+        <form action="/logout" method="POST" class="m-0">
+          <button class="btn btn-sm btn-outline-light">Đăng xuất</button>
+        </form>
+      <% } else { %>
+        <a href="/login" class="btn btn-sm btn-outline-light">Đăng nhập</a>
+        <a href="/register" class="btn btn-sm btn-light">Đăng ký</a>
+      <% } %>
+    </div>
+  </div>
+</nav>
